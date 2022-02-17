@@ -820,26 +820,27 @@ class FestivalrImporter {
 
   async batchedFindOrCreate({keyField, collectionName, documents}) {
     const collection = this.db.collection(collectionName)
-    const batch = this.db.batch()
     const groups = this.inGroupsOf(documents, 10)
 
     groups.forEach(async (group) => {
+      // can't put this outside without await for inner async function
+      const batch = this.db.batch() 
       const documentKeys = group.map((document) => document[keyField])
 
       const existingKeys = []
-      const querySnapshot = collection.where(keyField, 'in', documentKeys).select(keyField).get()
+      const querySnapshot = await collection.where(keyField, 'in', documentKeys).select(keyField).get()
       querySnapshot.forEach((documentSnapshot) => {
         existingKeys.push(documentSnapshot.data()[keyField])
       })
 
       group.forEach((document) => {
         if (!existingKeys.includes(document[keyField])) {
-          batch.create(collection.doc(), document)
+          console.log('adding track to create batch', document)
+          batch.set(collection.doc(), document)
         }
       })
+      batch.commit()
     })
-
-    await batch.commit()
   }
 
   async fillArtistResults(artistName) {
@@ -847,7 +848,7 @@ class FestivalrImporter {
 
     // const mixcloudResults = await this.fetchArtistMixcloudResults(artistSnapshot)
     const mixcloudResults = richieHawtinResults
-    const trackDocuments = mixCloudResults.map((result) => {
+    const trackDocuments = mixcloudResults.map((result) => {
       return {
         artist: artistSnapshot.ref,
         key: result.key,
@@ -861,7 +862,7 @@ class FestivalrImporter {
     console.log(trackDocuments)
 
     this.batchedFindOrCreate({
-      keyField: 'Key',
+      keyField: 'key',
       collectionName: 'tracks',
       documents: trackDocuments
     })
