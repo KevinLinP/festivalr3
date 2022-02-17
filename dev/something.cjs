@@ -1,6 +1,7 @@
 const { initializeApp, applicationDefault, cert } = require('firebase-admin/app')
 const { getFirestore, Timestamp, FieldValue } = require('firebase-admin/firestore')
 const serviceAccount = require('../secrets/firebase-adminsdk.json')
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args))
 
 const festivalId = 'H1jDo2vLM52hP4QnSUfj'
 const teaserArtists = [
@@ -98,7 +99,67 @@ class FestivalrImporter {
       console.log('created festivalArtist', {id: festivalArtistReference.id, data})
     }
   }
+
+  inGroupsOf(array, size) {
+    const groups = []
+
+    array.forEach((item, index) => {
+      const groupIndex = Math.floor(index / size)
+      groups[groupIndex] = groups[groupIndex] || []
+      groups[groupIndex].push(item)
+    })
+
+    return groups
+  }
+
+  async findExistingMixcloudIds(resultMixcloudIds) {
+    const trackCollection = this.db.collection('tracks')
+    const querySnapshot = await trackCollection.where('mixcloudId', 'in', resultMixcloudIds).select('mixcloudId').get()
+
+    const existingMixcloudIds = []
+    querySnapshot.forEach((trackSnapshot) => {
+      existingMixcloudIds.push(trackSnapshot.data().mixcloudId)
+    })
+
+    return existingMixcloudIds
+  }
+
+  async fillArtistResults(artistSnapshot) {
+    const mixcloudResults = await this.fetchArtistMixcloudResults(artistSnapshot)
+
+    const trackCollection = this.db.collection('tracks')
+    const batch = this.db.batch()
+
+    const groupedResults = inGroupsOf(mixcloudResults, 10)
+    groupedResults.forEach((group) => {
+      const resultMixcloudIds = group.map((result) => result.mixcloudId)
+      const existingMixcloudIds = this.findExistingMixcloudIds(resultMixcloudIds)
+      group.forEach((result) => {
+        if (existingMixcloudIds.includes(result.mixcloudId)) return
+
+        batch.create(trackCollection.doc(), result)
+      })
+    })
+
+    // batch.commit()
+  }
+
+  async fetchArtistMixcloudResults(artistSnapshot) {
+    const name = artistSnapshot.data().name
+    const params = new URLSearchParams({
+      q: `"${name}"`,
+      type: 'cloudcast'
+    })
+    const response = await fetch('https://api.mixcloud.com/search/?' + params.toString())
+    const data = await response.json().data
+    console.log({data})
+
+    return data
+  }
 }
 
 const importer = new FestivalrImporter()
-importer.addFestivalArtists()
+// importer.fetchArtistMixcloudResults({
+//   name: 'Richie Hawtin'
+// })
+console.log(importer.inGroupsOf([1, 2, 3, 4, 5, 6, 7, 8], 3))
