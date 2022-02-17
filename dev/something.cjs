@@ -820,11 +820,12 @@ class FestivalrImporter {
 
   async batchedFindOrCreate({keyField, collectionName, documents}) {
     const collection = this.db.collection(collectionName)
-    const groups = this.inGroupsOf(documents, 10)
+    const batch = this.db.batch() 
 
-    groups.forEach(async (group) => {
-      // can't put this outside without await for inner async function
-      const batch = this.db.batch() 
+    const groups = this.inGroupsOf(documents, 10)
+    for (let i = 0; i < groups.length; i++) {
+      const group = groups[i]
+
       const documentKeys = group.map((document) => document[keyField])
 
       const existingKeys = []
@@ -839,15 +840,13 @@ class FestivalrImporter {
           batch.set(collection.doc(), document)
         }
       })
-      batch.commit()
-    })
+    }
+
+    batch.commit()
   }
 
-  async fillArtistResults(artistName) {
-    const artistSnapshot = await this.fetchArtistSnapshotByName(artistName)
-
-    // const mixcloudResults = await this.fetchArtistMixcloudResults(artistSnapshot)
-    const mixcloudResults = richieHawtinResults
+  async fillArtistResults(artistSnapshot) {
+    const mixcloudResults = await this.fetchArtistMixcloudResults(artistSnapshot)
     const trackDocuments = mixcloudResults.map((result) => {
       return {
         artist: artistSnapshot.ref,
@@ -881,7 +880,29 @@ class FestivalrImporter {
 
     return results
   }
+
+  async fillAllArtistResults() {
+    const artistCollection = this.db.collection('artists')
+    const querySnapshot = await artistCollection.get()
+    const artistSnapshots = this.documentSnapshotArray(querySnapshot)
+
+    for(let i = 0; i < artistSnapshots.length; i++) {
+      const artistSnapshot = artistSnapshots[i]
+      console.log(artistSnapshot)
+      await this.fillArtistResults(artistSnapshot)
+    }
+  }
+
+  documentSnapshotArray(querySnapshot) {
+    const snapshots = []
+
+    querySnapshot.forEach((documentSnapshot) => {
+      snapshots.push(documentSnapshot)
+    })
+
+    return snapshots
+  }
 }
 
 const importer = new FestivalrImporter()
-importer.fillArtistResults('Richie Hawtin')
+importer.fillAllArtistResults()
