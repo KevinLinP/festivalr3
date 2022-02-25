@@ -89,17 +89,18 @@ class Exporter {
       tracks = tracks.sort((a, b) => {
         return b.postedAt - a.postedAt 
       })
+      tracks = tracks.slice(0, 5)
       tracks = tracks.map((track) => {
         return {
           key: track.key,
-          postedAt: track.postedAt,
+          postedAt: track.postedAt.toDate().toISOString(),
         }
       })
 
       json[artist.data().name] = tracks
     })
 
-    console.log(json)
+    console.log(JSON.stringify(json))
   }
 }
 
