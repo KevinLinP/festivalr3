@@ -74,8 +74,32 @@ class Exporter {
   }
 
   async printJson() {
-    const artists = await this.artists()
+    const json = {}
+
+    let artists = await this.artists()
+    artists = artists.sort((a, b) => {
+      return a.data().name.localeCompare(b.data().name)
+    })
     const tracksByArtist = await this.tracksByArtist(artists)
+
+    artists.forEach((artist) => {
+      let tracks = tracksByArtist[artist.id].map((track) => {
+        return track.data()
+      })
+      tracks = tracks.sort((a, b) => {
+        return b.postedAt - a.postedAt 
+      })
+      tracks = tracks.map((track) => {
+        return {
+          key: track.key,
+          postedAt: track.postedAt,
+        }
+      })
+
+      json[artist.data().name] = tracks
+    })
+
+    console.log(json)
   }
 }
 
