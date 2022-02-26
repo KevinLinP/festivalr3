@@ -1,7 +1,6 @@
 <script>
   import artists from '../lib/artists.json'
   import Artist from '../lib/Artist.svelte'
-  console.log(artists)
 </script>
 
 <div class="container px-0">
