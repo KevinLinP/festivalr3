@@ -1,12 +1,14 @@
 <script>
+  import { currentArtistName } from './store.js'
   import ArtistMusic from './ArtistMusic.svelte'
 
   export let artist
-  let open = false
 
   function nameClicked() {
-    open = !open
+    currentArtistName.set(artist.name)
   }
+
+  $: isCurrentArtist = ($currentArtistName == artist.name)
 </script>
 
 <style>
@@ -25,13 +27,14 @@
       on:click={nameClicked}
       class="artist-name display-3"
       style="width: 100%; line-height: 1.0;"
+      class:active={isCurrentArtist}
       href="javascript:void(0);"
     >
       { artist.name }
     </a>
   </div>
 
-  {#if open}
+  {#if isCurrentArtist}
   <div class="ms-md-4">
     <ArtistMusic tracks={artist.tracks} />
   </div>
