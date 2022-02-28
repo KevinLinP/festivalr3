@@ -1,6 +1,6 @@
 <script>
   import { currentArtistName } from './store.js'
-  import ArtistMusic from './ArtistMusic.svelte'
+  import Tracks from './Tracks.svelte'
 
   export let artist
 
@@ -36,7 +36,7 @@
 
   {#if isCurrentArtist}
   <div class="ms-md-4">
-    <ArtistMusic tracks={artist.tracks} />
+    <Tracks tracks={artist.tracks} />
   </div>
   {/if}
 </div>

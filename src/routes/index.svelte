@@ -9,10 +9,9 @@
     <h2 class="display-5 font-weight-thin text-muted ms-3">Teaser Lineup</h2>
   </header>
 
-  {#each artists as artist}
+  {#each artists as artist (artist.name)}
     <div class="mb-4">
       <Artist
-        key={artist.name}
         artist={artist}
       />
     </div>
