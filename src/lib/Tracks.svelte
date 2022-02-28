@@ -13,7 +13,9 @@
 <div>
   {#each tracks as track}
     <div class="d-flex flex-column mb-3">
-      <div class="align-self-end mb-1 me-2 text-muted" style="line-height: 1.0;">{ formatDate(track.postedAt) }</div>
+      <div class="align-self-end mb-1 me-2 text-muted" style="line-height: 1.0;">
+        { formatDate(track.created_time) }
+      </div>
 
       <iframe width="100%" height="60" title="{track.key}" src="https://www.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&feed={track.key}" frameborder="0"></iframe>
     </div>

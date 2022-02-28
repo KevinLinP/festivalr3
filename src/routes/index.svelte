@@ -1,5 +1,5 @@
 <script>
-  import artists from '../lib/artists.json'
+  import festival from '../lib/movement-2022.json'
   import Artist from '../lib/Artist.svelte'
 </script>
 
@@ -9,7 +9,7 @@
     <h2 class="display-5 font-weight-thin text-muted">Teaser Lineup</h2>
   </header>
 
-  {#each artists as artist (artist.name)}
+  {#each festival.artists as artist (artist.name)}
     <div class="mb-4">
       <Artist
         artist={artist}
