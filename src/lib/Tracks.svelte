@@ -3,7 +3,10 @@
 
   function formatDate(dateString) {
     const date = new Date(dateString)
-    return date.toLocaleDateString(undefined, {month: 'short', year: 'numeric'})
+    const month = date.toLocaleDateString(undefined, {month: 'short'})
+    const year = date.toLocaleDateString(undefined, {year: '2-digit'})
+
+    return `${month} '${year}`
   }
 </script>
 
