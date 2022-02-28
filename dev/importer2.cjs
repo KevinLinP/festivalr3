@@ -63,7 +63,8 @@ class Importer {
       const artistRef = artistRefs[i]
       const name = teaserArtists[i]
       const query = `"${name}"`
-      const tracks = await this.fetchArtistMixcloudResults(query)
+      let tracks = await this.fetchArtistMixcloudResults(query)
+      tracks = tracks.sort((a, b))
 
       const artist = {
         name,
@@ -88,7 +89,36 @@ class Importer {
     return results
   }
 
+  async normalizeArtistTracks() {
+    const querySnapshot = await this.artistsReference.get()
+    const artists = []
+    querySnapshot.forEach((artistSnapshot) => {
+      artists.push(artistSnapshot)
+    })
+
+    const batch = this.db.batch()
+
+    artists.forEach((snapshot) => {
+      const artist = snapshot.data()
+      let tracks = artist.tracks
+
+      // tracks.forEach((track) => {
+      //   track.created_time = new Date(track.created_time)
+      //   track.updated_time = new Date(track.updated_time)
+      // })
+
+      tracks = tracks.sort((a, b) => {
+        return b.created_time - a.created_time
+      })
+
+      batch.set(snapshot.ref, {tracks}, {merge: true})
+    })
+
+    batch.commit()
+  }
+
 }
 
 const importer = new Importer()
-importer.createOrUpdateArtists()
+// importer.createOrUpdateArtists()
+importer.normalizeArtistTracks()
